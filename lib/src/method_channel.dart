@@ -18,30 +18,50 @@ const String _kOnItemSelected = "onItemSelected";
 /// Called when menu is dismissed without clicking any item.
 const String _kOnMenuDismissed = "onMenuDismissed";
 
-class MenuItem {
-  MenuItem({
+abstract class MenuItem {
+  late int _id;
+
+  Map<String, dynamic> toJson() => { 'id': _id };
+}
+
+class MenuDivider extends MenuItem {
+  @override
+  Map<String, dynamic> toJson() => super.toJson()..addAll({
+    'divider': true,
+  });
+}
+
+class MenuAction extends MenuItem {
+  MenuAction({
     required this.title,
     this.onSelected,
     this.action,
+  });
+
+  final String title;
+  final Object? action;
+  final VoidCallback? onSelected;
+
+  @override
+  Map<String, dynamic> toJson() => super.toJson()..addAll({
+    'title': title,
+  });
+}
+
+class Submenu extends MenuItem {
+  Submenu({
+    required this.title,
     this.items = const <MenuItem>[],
   });
 
-  late int _id;
   final String title;
   final List<MenuItem> items;
-  final Object? action;
 
-  final VoidCallback? onSelected;
-
-  bool get hasSubitems => items.isNotEmpty;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': _id,
-      'title': title,
-      'items': items.map((e) => e.toJson()).toList(),
-    };
-  }
+  @override
+  Map<String, dynamic> toJson() => super.toJson()..addAll({
+    'title': title,
+    'items': items.map((e) => e.toJson()).toList(),
+  });
 }
 
 class ShowMenuArgs {
@@ -110,7 +130,7 @@ Map<int, MenuItem> _buildMenu(List<MenuItem> items) {
   for (var item in items) {
     item._id = _menuItemId++;
     built[item._id] = item;
-    if (item.hasSubitems) {
+    if (item is Submenu) {
       final submenu = _buildMenu(item.items);
       built.addAll(submenu);
     }

@@ -22,20 +22,21 @@ class _AppState extends State<App> {
         body: ContextMenuRegion(
           onDismissed: () => setState(() => action = 'Menu was dismissed'),
           onItemSelected: (item) => setState(() {
-            action = '${item.title} was selected';
+            action = '${(item as MenuAction).title} was selected';
           }),
           menuItems: [
-            MenuItem(title: 'First item'),
-            MenuItem(title: 'Second item'),
-            MenuItem(
+            MenuAction(title: 'First item'),
+            MenuAction(title: 'Second item'),
+            Submenu(
               title: 'Third item with submenu',
               items: [
-                MenuItem(title: 'First subitem'),
-                MenuItem(title: 'Second subitem'),
-                MenuItem(title: 'Third subitem'),
+                MenuAction(title: 'First subitem'),
+                MenuAction(title: 'Second subitem'),
+                MenuAction(title: 'Third subitem'),
               ],
             ),
-            MenuItem(title: 'Fourth item'),
+            MenuDivider(),
+            MenuAction(title: 'Fourth item'),
           ],
           child: Card(
             child: Center(

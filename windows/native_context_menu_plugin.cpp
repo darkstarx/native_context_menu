@@ -145,18 +145,38 @@ void NativeContextMenuPlugin::CreateMenu(HMENU menu,
   for (const auto& item_value : items) {
     auto item = std::get<flutter::EncodableMap>(item_value);
     int32_t id = std::get<int32_t>(item[flutter::EncodableValue("id")]);
-    auto title = std::get<std::string>(item[flutter::EncodableValue("title")]);
     UINT_PTR item_id = id;
-    UINT uFlags = MF_STRING;
-    auto sub_items = std::get<flutter::EncodableList>(
-        item[flutter::EncodableValue("items")]);
-    if (sub_items.size() > 0) {
-      uFlags |= MF_POPUP;
-      HMENU sub_menu = ::CreatePopupMenu();
-      CreateMenu(sub_menu, item);
-      item_id = reinterpret_cast<UINT_PTR>(sub_menu);
+    LPCWSTR item_str = nullptr;
+    UINT uFlags = 0;
+
+    const auto key_divider = flutter::EncodableValue("divider");
+    const auto it_divider = item.find(key_divider);
+    if (it_divider != item.end()) {
+      uFlags |= MF_SEPARATOR;
     }
-    ::AppendMenuW(menu, uFlags, item_id, converter_.from_bytes(title).c_str());
+
+    const auto key_title = flutter::EncodableValue("title");
+    const auto it_title = item.find(key_title);
+    std::wstring title;
+    if (it_title != item.end()) {
+      title = converter_.from_bytes(std::get<std::string>(it_title->second));
+      item_str = title.c_str();
+      uFlags |= MF_STRING;
+    }
+
+    const auto key_items = flutter::EncodableValue("items");
+    const auto it_items = item.find(key_items);
+    if (it_items != item.end()) {
+      const auto sub_items = std::get<flutter::EncodableList>(it_items->second);
+      if (sub_items.size() > 0) {
+        uFlags |= MF_POPUP;
+        HMENU sub_menu = ::CreatePopupMenu();
+        CreateMenu(sub_menu, item);
+        item_id = reinterpret_cast<UINT_PTR>(sub_menu);
+      }
+    }
+
+    ::AppendMenuW(menu, uFlags, item_id, item_str);
   }
 }
 
